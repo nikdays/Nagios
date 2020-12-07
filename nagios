@@ -1,0 +1,48 @@
+#!/usr/bin/python3
+import subprocess
+
+def time():
+	subprocess.run(["sudo dpkg-reconfigure tzdata"],shell=True)
+	subprocess.run(['sudo apt-get install ntpdate'],shell=True)
+	subprocess.run(['sudo ntpdate -dv pool.ntp.org'],shell=True)
+#########################################################################
+
+def pre_req():
+	subprocess.run(['sudo apt-get install -y apache2 apache2-utils autoconf gcc libc6 libgd-dev make php python python3 tree unzip wget'],shell=True)
+#########################################################################
+#function that will download and extract nagios
+def dwnld():
+	subprocess.run(['cd /tmp && sudo wget https://assets.nagios.com/downloads/nagioscore/releases/nagios-4.4.5.tar.gz'],shell=True)
+	subprocess.run(['cd /tmp && tar -xzf nagios-4.4.5.tar.gz'],shell=True)
+
+#nagios installation
+def cnfig():
+	subprocess.run(['cd /tmp/nagios-4.4.5 && sudo ./configure --with-httpd-conf=/etc/apache2/sites-enabled/'],shell=True)
+	subprocess.run(['cd /tmp/nagios-4.4.5 && sudo make all'],shell=True)
+	subprocess.run(['cd /tmp/nagios-4.4.5 && sudo make install-groups-users && sudo passwd nagios'],shell=True)
+	subprocess.run(['cd /tmp/nagios-4.4.5 && sudo usermod -a -G nagios www-data'],shell=True)
+	subprocess.run(['cd /tmp/nagios-4.4.5 && sudo make install'],shell=True)
+	subprocess.run(['cd /tmp/nagios-4.4.5 && sudo make install-daemoninit'],shell=True)
+	subprocess.run(['cd /tmp/nagios-4.4.5 && sudo make install-commandmode'],shell=True)
+	subprocess.run(['cd /tmp/nagios-4.4.5 && sudo make install-config'],shell=True)
+	subprocess.run(['cd /tmp/nagios-4.4.5 && sudo make install-webconf'],shell=True)
+	subprocess.run(['cd /tmp/nagios-4.4.5 && sudo a2enmod rewrite'],shell=True)
+	subprocess.run(['cd /tmp/nagios-4.4.5 && sudo a2enmod cgi'],shell=True)
+	subprocess.run(['sudo htpasswd -c /usr/local/nagios/etc/htpasswd.users nagiosadmin'],shell=True)
+	subprocess.run(['sudo /usr/local/nagios/bin/nagios -v /usr/local/nagios/etc/nagios.cfg '],shell=True)
+	subprocess.run(['sudo systemctl restart apache2 && sudo systemctl start nagios'],shell=True)
+
+#nagios plugin
+def nagplug():
+	subprocess.run(['sudo apt-get install -y automake autotools-dev bc gawk gettext libmcrypt-dev libnet-snmp-perl libssl-dev snmp dc build-essential'],shell=True)
+	subprocess.run(['cd /tmp && wget https://nagios-plugins.org/download/nagios-plugins-2.3.1.tar.gz'],shell=True)
+	subprocess.run(['cd /tmp && tar -xzf nagios-plugins-2.3.1.tar.gz'],shell=True)
+	subprocess.run(['cd /tmp/nagios-plugins-2.3.1 && sudo ./configure && sudo make && sudo make install'],shell=True)
+def main():
+	time()
+	pre_req()
+	dwnld()
+	cnfig()
+	nagplug()
+if __name__=='__main__':
+	main() 
